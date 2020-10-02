@@ -2,22 +2,16 @@
  * External dependencies
  */
 import React from 'react';
-import page from 'page';
 import { get, has, isInteger, noop } from 'lodash';
 
 /**
  * Internal dependencies
  */
-import { shouldLoadGutenberg } from 'state/selectors/should-load-gutenberg';
-import { shouldRedirectGutenberg } from 'state/selectors/should-redirect-gutenberg';
 import { EDITOR_START, POST_EDIT } from 'state/action-types';
-import { getSelectedSiteId, getSelectedSiteSlug } from 'state/ui/selectors';
+import { getSelectedSiteId } from 'state/ui/selectors';
 import { stopEditingPost } from 'state/editor/actions';
 import CalypsoifyIframe from './calypsoify-iframe';
-import getGutenbergEditorUrl from 'state/selectors/get-gutenberg-editor-url';
 import { addQueryArgs } from 'lib/route';
-import { getSelectedEditor } from 'state/selectors/get-selected-editor';
-import { requestSelectedEditor } from 'state/selected-editor/actions';
 import {
 	getSiteUrl,
 	getSiteOption,
@@ -29,8 +23,6 @@ import isSiteWpcomAtomic from 'state/selectors/is-site-wpcom-atomic';
 import { isEnabled } from 'config';
 import { Placeholder } from './placeholder';
 import { makeLayout, render } from 'controller';
-import isSiteUsingCoreSiteEditor from 'state/selectors/is-site-using-core-site-editor';
-import getSiteEditorUrl from 'state/selectors/get-site-editor-url';
 import { REASON_BLOCK_EDITOR_JETPACK_REQUIRES_SSO } from 'state/desktop/window-events';
 import { notifyDesktopCannotOpenEditor } from 'state/desktop/actions';
 import { requestSite } from 'state/sites/actions';
@@ -61,28 +53,6 @@ function getPostID( context ) {
 
 	// both post and site are in the path
 	return parseInt( context.params.post, 10 );
-}
-
-function waitForSiteIdAndSelectedEditor( context ) {
-	return new Promise( ( resolve ) => {
-		const unsubscribe = context.store.subscribe( () => {
-			const state = context.store.getState();
-			const siteId = getSelectedSiteId( state );
-			if ( ! siteId ) {
-				return;
-			}
-			const selectedEditor = getSelectedEditor( state, siteId );
-			if ( ! selectedEditor ) {
-				return;
-			}
-			unsubscribe();
-			resolve();
-		} );
-		// Trigger a `store.subscribe()` callback
-		context.store.dispatch(
-			requestSelectedEditor( getSelectedSiteId( context.store.getState() ) )
-		);
-	} );
 }
 
 /**
@@ -227,8 +197,6 @@ export const siteEditor = ( context, next ) => {
 
 export const exitPost = ( context, next ) => {
 	const postId = getPostID( context );
-	console.log( { postId } );
-
 	const siteId = getSelectedSiteId( context.store.getState() );
 	if ( siteId ) {
 		context.store.dispatch( stopEditingPost( siteId, postId ) );
